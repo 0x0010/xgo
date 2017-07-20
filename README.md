@@ -1,0 +1,2 @@
+# xgo
+my golang tutorial
