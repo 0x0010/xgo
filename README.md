@@ -8,7 +8,7 @@ cd github.com
 mkdir 0x0010.com
 git clone https://github.com/0x0010/xgo.git
 ````
-2. 编译打包，已hello为例
+2. 编译打包，以hello为例
 ````shell
 cd $GOPATH/src/github.com/0x0010/xgo/hello
 go install
