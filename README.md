@@ -5,7 +5,8 @@
 cd $GOPATH/src
 mkdir github.com
 cd github.com
-mkdir 0x0010.com
+mkdir 0x0010
+cd 0x0010
 git clone https://github.com/0x0010/xgo.git
 ````
 2. 编译打包，以hello为例
