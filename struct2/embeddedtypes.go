@@ -9,4 +9,3 @@ func main() {
 	android.SetName("Helen")
 	android.Talk()
 }
-
