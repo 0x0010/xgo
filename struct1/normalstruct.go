@@ -5,7 +5,8 @@ import (
 )
 
 func main() {
-	jack := new(xtype.Person)
-	jack.SetName("Jack")
+	jack := xtype.NewPerson("Jack[Set by constructor]")
+	jack.Talk()
+	jack.SetName("Jack[Set by SetName method]")
 	jack.Talk()
 }
