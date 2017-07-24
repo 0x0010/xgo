@@ -1,4 +1,4 @@
-package xpkg
+package xtype
 
 import "fmt"
 
