@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/0x0010/xgo/stringutil"
+	"github.com/0x0010/xgo/log"
 )
 
 func main() {
@@ -10,6 +11,7 @@ func main() {
 	fmt.Println(stringutil.Reverse("!oG olleH :gnirts desreveR"))
 	fmt.Println(Reverse("!oG olleH :litu egakcap evitan gnisu gnirts desreveR"))
 	fmt.Println(stringutil.Split("Split string from split function"))
+	log.XLog.Println("Hello from xlog");
 }
 
 func Reverse(s string) string {
