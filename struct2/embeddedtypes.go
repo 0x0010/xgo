@@ -8,4 +8,7 @@ func main() {
 	android := new(xtype.Android)
 	android.SetName("Helen")
 	android.Talk()
+
+	android = xtype.NewAndroid("Jobs", "model")
+	android.Talk()
 }
