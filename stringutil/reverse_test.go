@@ -1,6 +1,9 @@
 package stringutil
 
-import "testing"
+import (
+	"testing"
+	"fmt"
+)
 
 func TestReverse(t *testing.T) {
 	cases := []struct {
@@ -15,5 +18,17 @@ func TestReverse(t *testing.T) {
 		if got != c.want {
 			t.Errorf("Reverse(%q) == %q, want %q", c.in, got, c.want)
 		}
+	}
+}
+
+
+func TestConversion(t *testing.T) {
+	//rune type
+	codePoint := int32(22909)
+	// string value
+	str := "中"
+	// code point of "中" is 22909
+	if codePoint != []rune(str)[0] {
+		fmt.Errorf("%v rune value is not %d", str, codePoint)
 	}
 }
