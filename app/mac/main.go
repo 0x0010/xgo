@@ -11,7 +11,7 @@ var (
 
 func main() {
 	app.OnLaunch = func() {
-		appMenu := &AppMainMenu{}    // Creates the AppMainMenu component.
+		appMenu := &AppMainMenu{} // Creates the AppMainMenu component.
 		if menuBar, ok := app.MenuBar(); ok { // Mounts the AppMainMenu component into the application menu bar.
 			menuBar.Mount(appMenu)
 		}

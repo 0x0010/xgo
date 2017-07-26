@@ -21,7 +21,6 @@ func TestReverse(t *testing.T) {
 	}
 }
 
-
 func TestConversion(t *testing.T) {
 	//rune type
 	codePoint := int32(22909)

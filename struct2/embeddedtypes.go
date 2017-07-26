@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/0x0010/xgo/xtype"
+	"fmt"
 )
 
 func main() {
@@ -9,6 +10,7 @@ func main() {
 	android.SetName("Helen")
 	android.Talk()
 
-	android = xtype.NewAndroid("Jobs", "model")
-	android.Talk()
+	android2 := xtype.NewAndroid("Jobs", "model")
+	fmt.Println(android2)
+	android2.Talk()
 }

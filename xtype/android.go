@@ -5,8 +5,8 @@ type Android struct {
 	model string
 }
 
-func NewAndroid(name, model string) *Android {
-	a := &Android{model: model}
+func NewAndroid(name, model string) (a Android) {
+	a.model = model
 	a.name = name
-	return a
+	return
 }
