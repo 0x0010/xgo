@@ -32,8 +32,8 @@ type MessageBody struct {
 	bl      string
 }
 
-func newDyProtocol(data string, msgType uint16) DyProtocol {
-	return DyProtocol{0, msgType, uint8(0), uint8(0), data}
+func newDyProtocol(data string, msgType uint16) *DyProtocol {
+	return &DyProtocol{0, msgType, uint8(0), uint8(0), data}
 }
 
 func (p *DyProtocol) serialize() []byte {
@@ -95,7 +95,7 @@ func dialServer() net.Conn {
 }
 
 func login(conn net.Conn, roomId string) string {
-	conn.Write(newDyProtocol("type@=loginreq/roomid@=" + roomId + "/", MsgTypeC2S).serialize())
+	conn.Write(newDyProtocol("type@=loginreq/roomid@="+roomId+"/", MsgTypeC2S).serialize())
 	msg, err := readMessage(conn, 5*time.Second)
 	if nil != err {
 		log.Panic(err)
@@ -103,13 +103,13 @@ func login(conn net.Conn, roomId string) string {
 	return msg
 }
 
-func logout (conn net.Conn) {
+func logout(conn net.Conn) {
 	conn.Write(newDyProtocol("type@=logout/", MsgTypeC2S).serialize())
 	conn.Close()
 }
 
 func joinGroup(conn net.Conn, roomId string) {
-	conn.Write(newDyProtocol("type@=joingroup/gid@=-9999/rid@=" + roomId + "/", MsgTypeC2S).serialize())
+	conn.Write(newDyProtocol("type@=joingroup/gid@=-9999/rid@="+roomId+"/", MsgTypeC2S).serialize())
 }
 
 func readMessage(conn net.Conn, d time.Duration) (msg string, err error) {
