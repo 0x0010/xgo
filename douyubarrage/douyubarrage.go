@@ -133,6 +133,9 @@ func readMessage(conn net.Conn, d time.Duration) (msg string, err error) {
 		//log.Fatal(err)
 		return "", nil
 	}
+	if count <= 8 {
+		return "", err
+	}
 	if nil != err {
 		return "", err
 	}

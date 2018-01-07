@@ -69,6 +69,7 @@ func main() {
 	config.Passwd = "root123"
 	config.Addr = "127.0.0.1:3306"
 	config.DBName = "douyubarrage"
+	config.Collation = "utf8mb4_general_ci"
 
 	//open mysql
 	//db, err := sql.Open("mysql", "root:root123@127.0.0.1:3306/douyubarrage")
@@ -81,7 +82,6 @@ func main() {
 	db.SetConnMaxLifetime(10 * time.Minute)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
-
 
 	conn := dialServer()
 	defer logout(conn)
@@ -150,14 +150,13 @@ func readMessage(conn net.Conn, d time.Duration) (msg string, err error) {
 		time.Sleep(1 * time.Second)
 		return "", nil
 	}
-	//log.Print("message length ", msgBytesCount)
-
 	msgBody := make([]byte, msgBytesCount)
 	conn.SetReadDeadline(time.Now().Add(d))
 	count, err := conn.Read(msgBody)
-	//log.Print("message read length ", count)
 	if uint32(count) != msgBytesCount {
-		//log.Fatal(err)
+		return "", nil
+	}
+	if count <= 8 {
 		return "", nil
 	}
 	if nil != err {
