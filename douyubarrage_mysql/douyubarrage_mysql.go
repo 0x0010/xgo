@@ -79,7 +79,7 @@ func main() {
 		log.Panic(err)
 	}
 	defer db.Close()
-	db.SetConnMaxLifetime(10 * time.Minute)
+	db.SetConnMaxLifetime(2 * time.Minute)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
 
@@ -216,6 +216,7 @@ func saveMessageToDB(db *sql.DB, msg MessageBody, roomId string) {
 	if err != nil {
 		log.Print("Prepare error! ", err)
 	}
+	defer stmtIns.Close()
 	_, err = stmtIns.Exec(roomId, msg.uid, msg.nn, msg.level, msg.bnn, msg.bl, msg.txt)
 	if err != nil {
 		log.Print("Prepare execute error! ", err)
