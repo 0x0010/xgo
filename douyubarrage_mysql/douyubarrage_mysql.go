@@ -107,7 +107,7 @@ func main() {
 			if strings.Compare("chatmsg", message.msgType) == 0 {
 				log.Printf("UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
 					message.uid, message.nn, message.level, message.bnn, message.bl, message.txt)
-				saveMessageToDB(db, message, roomId)
+				go saveMessageToDB(db, message, roomId)
 			}
 		}
 	}
