@@ -8,8 +8,7 @@ import (
 	"time"
 	"strings"
 	"os"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"fmt"
 )
 
 const (
@@ -77,18 +76,33 @@ func main() {
 
 	go heartbeat(conn)
 
+	msgChannel := make(chan MessageBody)
+
+	i := 3
+	for i > 0 {
+		i--
+		go pullChannel(fmt.Sprintf("pull-channel-%v", i), msgChannel)
+	}
+
 	for {
-		msg, err := readMessage(conn, 5*time.Second)
+		msg, err := readMessage(conn, 30*time.Second)
 		if nil != err {
 			log.Fatal(err)
 		}
 		if len(msg) > 0 {
 			message := decodeMessage(msg)
 			if strings.Compare("chatmsg", message.msgType) == 0 {
-				log.Printf("UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
-					message.uid, message.nn, message.level, message.bnn, message.bl, message.txt)
+				msgChannel <- message
 			}
 		}
+	}
+}
+
+func pullChannel(chanName string, ch <-chan MessageBody) {
+	for {
+		message := <-ch
+		log.Printf("%s -> UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
+			chanName, message.uid, message.nn, message.level, message.bnn, message.bl, message.txt)
 	}
 }
 

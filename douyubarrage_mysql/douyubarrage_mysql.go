@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-sql-driver/mysql"
+	"fmt"
 )
 
 const (
@@ -97,6 +98,14 @@ func main() {
 
 	go heartbeat(conn)
 
+	msgChannel := make(chan MessageBody)
+
+	i := 3
+	for i > 0 {
+		i--
+		go pullChannel(fmt.Sprintf("pull-channel-%v", i), roomId, msgChannel, db)
+	}
+
 	for {
 		msg, err := readMessage(conn, 5*time.Second)
 		if nil != err {
@@ -105,11 +114,28 @@ func main() {
 		if len(msg) > 0 {
 			message := decodeMessage(msg)
 			if strings.Compare("chatmsg", message.msgType) == 0 {
-				log.Printf("UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
-					message.uid, message.nn, message.level, message.bnn, message.bl, message.txt)
-				go saveMessageToDB(db, message, roomId)
+				msgChannel <- message
 			}
 		}
+	}
+}
+
+func pullChannel(chanName string, roomId string, ch <-chan MessageBody, db *sql.DB) {
+	for {
+		msg := <-ch
+		log.Printf("%s -> UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
+			chanName, msg.uid, msg.nn, msg.level, msg.bnn, msg.bl, msg.txt)
+
+		stmtIns, err := db.Prepare("INSERT INTO chatmessage(RoomId, UID, UName, ULevel, BNN, BNNLevel, TXT) VALUES( ?, ?, ?, ?, ?, ?, ?)") // ? = placeholder
+		if err != nil {
+			log.Print("Prepare error! ", err)
+		}
+
+		_, err = stmtIns.Exec(roomId, msg.uid, msg.nn, msg.level, msg.bnn, msg.bl, msg.txt)
+		if err != nil {
+			log.Print("Prepare execute error! ", err)
+		}
+		stmtIns.Close()
 	}
 }
 
@@ -209,16 +235,4 @@ func decodeMessage(message string) MessageBody {
 		}
 	}
 	return mb
-}
-
-func saveMessageToDB(db *sql.DB, msg MessageBody, roomId string) {
-	stmtIns, err := db.Prepare("INSERT INTO chatmessage(RoomId, UID, UName, ULevel, BNN, BNNLevel, TXT) VALUES( ?, ?, ?, ?, ?, ?, ?)") // ? = placeholder
-	if err != nil {
-		log.Print("Prepare error! ", err)
-	}
-	defer stmtIns.Close()
-	_, err = stmtIns.Exec(roomId, msg.uid, msg.nn, msg.level, msg.bnn, msg.bl, msg.txt)
-	if err != nil {
-		log.Print("Prepare execute error! ", err)
-	}
 }
