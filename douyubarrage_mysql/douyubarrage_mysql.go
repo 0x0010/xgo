@@ -9,9 +9,9 @@ import (
 	"strings"
 	"os"
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-sql-driver/mysql"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
+	"reflect"
 )
 
 const (
@@ -27,13 +27,23 @@ type DyProtocol struct {
 }
 
 type MessageBody struct {
-	msgType string
-	uid     string
-	level   string
-	nn      string
-	txt     string
-	bnn     string
-	bl      string
+	MsgType string
+	Uid     string
+	Level   string
+	Nn      string
+	Txt     string
+	Bnn     string
+	Bl      string
+}
+
+var ProtocolMapping = map[string]string{
+	"type":  "MsgType",
+	"uid":   "Uid",
+	"nn":    "Nn",
+	"level": "Level",
+	"txt":   "Txt",
+	"bnn":   "Bnn",
+	"bl":    "Bl",
 }
 
 func newDyProtocol(data string, msgType uint16) *DyProtocol {
@@ -52,9 +62,7 @@ func (p *DyProtocol) serialize() []byte {
 	binary.Write(buffer, binary.LittleEndian, p.msgType)
 	binary.Write(buffer, binary.LittleEndian, p.encrypt)
 	binary.Write(buffer, binary.LittleEndian, p.reserved)
-	// writes message body
 	buffer.Write(dataBytes)
-	// message body end
 	binary.Write(buffer, binary.LittleEndian, uint8(0))
 	return buffer.Bytes()
 }
@@ -64,7 +72,6 @@ func main() {
 		log.Panic("Invalid arguments, roomId is required!")
 	}
 	roomId := os.Args[1:][0]
-
 	config := mysql.NewConfig()
 	config.User = "root"
 	config.Passwd = "root123"
@@ -113,7 +120,7 @@ func main() {
 		}
 		if len(msg) > 0 {
 			message := decodeMessage(msg)
-			if strings.Compare("chatmsg", message.msgType) == 0 {
+			if strings.Compare("chatmsg", message.MsgType) == 0 {
 				msgChannel <- message
 			}
 		}
@@ -124,14 +131,14 @@ func pullChannel(chanName string, roomId string, ch <-chan MessageBody, db *sql.
 	for {
 		msg := <-ch
 		log.Printf("%s -> UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
-			chanName, msg.uid, msg.nn, msg.level, msg.bnn, msg.bl, msg.txt)
+			chanName, msg.Uid, msg.Nn, msg.Level, msg.Bnn, msg.Bl, msg.Txt)
 
 		stmtIns, err := db.Prepare("INSERT INTO chatmessage(RoomId, UID, UName, ULevel, BNN, BNNLevel, TXT) VALUES( ?, ?, ?, ?, ?, ?, ?)") // ? = placeholder
 		if err != nil {
 			log.Print("Prepare error! ", err)
 		}
 
-		_, err = stmtIns.Exec(roomId, msg.uid, msg.nn, msg.level, msg.bnn, msg.bl, msg.txt)
+		_, err = stmtIns.Exec(roomId, msg.Uid, msg.Nn, msg.Level, msg.Bnn, msg.Bl, msg.Txt)
 		if err != nil {
 			log.Print("Prepare execute error! ", err)
 		}
@@ -148,7 +155,7 @@ func dialServer() net.Conn {
 }
 
 func login(conn net.Conn, roomId string) string {
-	conn.Write(newDyProtocol("type@=loginreq/roomid@="+roomId+"/", MsgTypeC2S).serialize())
+	conn.Write(newDyProtocol(fmt.Sprintf("type@=loginreq/roomid@=%s/", roomId), MsgTypeC2S).serialize())
 	msg, err := readMessage(conn, 5*time.Second)
 	if nil != err {
 		log.Panic(err)
@@ -162,7 +169,7 @@ func logout(conn net.Conn) {
 }
 
 func joinGroup(conn net.Conn, roomId string) {
-	conn.Write(newDyProtocol("type@=joingroup/gid@=-9999/rid@="+roomId+"/", MsgTypeC2S).serialize())
+	conn.Write(newDyProtocol(fmt.Sprintf("type@=joingroup/gid@=-9999/rid@=%s/", roomId), MsgTypeC2S).serialize())
 }
 
 func readMessage(conn net.Conn, d time.Duration) (msg string, err error) {
@@ -207,31 +214,8 @@ func decodeMessage(message string) MessageBody {
 		if len(entry) != 2 {
 			continue
 		}
-		entryValue := entry[1]
-		switch entry[0] {
-		case "type":
-			mb.msgType = entryValue
-			break
-		case "uid":
-			mb.uid = entryValue
-			break
-		case "nn":
-			mb.nn = entryValue
-			break
-		case "level":
-			mb.level = entryValue
-			break
-		case "txt":
-			mb.txt = entryValue
-			break
-		case "bnn":
-			mb.bnn = entryValue
-			break
-		case "bl":
-			mb.bl = entryValue
-			break
-		default:
-			continue
+		if mappedField, ok := ProtocolMapping[entry[0]]; ok {
+			reflect.Indirect(reflect.ValueOf(&mb)).FieldByName(mappedField).SetString(entry[1])
 		}
 	}
 	return mb

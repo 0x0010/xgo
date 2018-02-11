@@ -8,6 +8,7 @@ import (
 	"time"
 	"strings"
 	"os"
+	"reflect"
 )
 
 const (
@@ -23,13 +24,23 @@ type DyProtocol struct {
 }
 
 type MessageBody struct {
-	msgType string
-	uid     string
-	level   string
-	nn      string
-	txt     string
-	bnn     string
-	bl      string
+	MsgType string
+	Uid     string
+	Level   string
+	Nn      string
+	Txt     string
+	Bnn     string
+	Bl      string
+}
+
+var ProtocolMapping = map[string]string{
+	"type":  "MsgType",
+	"uid":   "Uid",
+	"nn":    "Nn",
+	"level": "Level",
+	"txt":   "Txt",
+	"bnn":   "Bnn",
+	"bl":    "Bl",
 }
 
 func newDyProtocol(data string, msgType uint16) *DyProtocol {
@@ -78,9 +89,9 @@ func main() {
 		}
 		if len(msg) > 0 {
 			message := decodeMessage(msg)
-			if strings.Compare("chatmsg", message.msgType) == 0 {
+			if strings.Compare("chatmsg", message.MsgType) == 0 {
 				log.Printf("UserId: %10s, UserName:%s, UserLvl: %s, Bnn: %s, BnLvl:%s, Txt:%s",
-					message.uid, message.nn, message.level, message.bnn, message.bl, message.txt)
+					message.Uid, message.Nn, message.Level, message.Bnn, message.Bl, message.Txt)
 			}
 		}
 	}
@@ -158,31 +169,8 @@ func decodeMessage(message string) MessageBody {
 		if len(entry) != 2 {
 			continue
 		}
-		entryValue := entry[1]
-		switch entry[0] {
-		case "type":
-			mb.msgType = entryValue
-			break
-		case "uid":
-			mb.uid = entryValue
-			break
-		case "nn":
-			mb.nn = entryValue
-			break
-		case "level":
-			mb.level = entryValue
-			break
-		case "txt":
-			mb.txt = entryValue
-			break
-		case "bnn":
-			mb.bnn = entryValue
-			break
-		case "bl":
-			mb.bl = entryValue
-			break
-		default:
-			continue
+		if mappedField, ok := ProtocolMapping[entry[0]]; ok {
+			reflect.Indirect(reflect.ValueOf(&mb)).FieldByName(mappedField).SetString(entry[1])
 		}
 	}
 	return mb
