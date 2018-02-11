@@ -9,6 +9,7 @@ import (
 	"strings"
 	"os"
 	"reflect"
+	"fmt"
 )
 
 const (
@@ -106,7 +107,7 @@ func dialServer() net.Conn {
 }
 
 func login(conn net.Conn, roomId string) string {
-	conn.Write(newDyProtocol("type@=loginreq/roomid@="+roomId+"/", MsgTypeC2S).serialize())
+	conn.Write(newDyProtocol(fmt.Sprintf("type@=loginreq/roomid@=%s/", roomId), MsgTypeC2S).serialize())
 	msg, err := readMessage(conn, 5*time.Second)
 	if nil != err {
 		log.Panic(err)
@@ -120,7 +121,7 @@ func logout(conn net.Conn) {
 }
 
 func joinGroup(conn net.Conn, roomId string) {
-	conn.Write(newDyProtocol("type@=joingroup/gid@=-9999/rid@="+roomId+"/", MsgTypeC2S).serialize())
+	conn.Write(newDyProtocol(fmt.Sprintf("type@=joingroup/gid@=-9999/rid@=%s/", roomId), MsgTypeC2S).serialize())
 }
 
 func readMessage(conn net.Conn, d time.Duration) (msg string, err error) {
